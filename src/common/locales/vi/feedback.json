@@ -1,0 +1,30 @@
+{
+    "feedback": {
+        "create": {
+            "success": "Tạo phản hồi thành công",
+            "failed": "Tạo phản hồi thất bại"
+        },
+        "getAll": {
+            "success": "Lấy danh sách phản hồi thành công",
+            "failed": "Lấy danh sách phản hồi thất bại"
+        },
+        "update": {
+            "success": "Cập nhật phản hồi thành công",
+            "failed": "Cập nhật phản hồi thất bại"
+        },
+        "delete": {
+            "success": "Xóa phản hồi thành công",
+            "failed": "Xóa phản hồi thất bại"
+        }
+    },
+    "errors": {
+        "not_found": "Không tìm thấy phản hồi",
+        "project_not_found": "Không tìm thấy dự án",
+        "missing_fields": "Thiếu thông tin bắt buộc",
+        "server_error": "Đã xảy ra lỗi từ máy chủ"
+    },
+    "notification": {
+        "new_feedback": "Có phản hồi mới từ khách hàng",
+        "feedback_updated": "Phản hồi đã được cập nhật"
+    }
+} 

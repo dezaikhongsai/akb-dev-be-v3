@@ -1,0 +1,27 @@
+{
+  "notFound": "PMが見つかりません",
+  "noPersonalInfo": "このアカウントには個人情報がありません",
+  "notCreated": "このPMはまだ作成されていません",
+  "alreadyExists": "PMは既に存在します",
+  "create": {
+    "success": "PMを作成しました"
+  },
+  "getAll": {
+    "success": "全てのPMを取得しました"
+  },
+  "getByUserId": {
+    "success": "ユーザーIDによるPMの取得に成功しました"
+  },
+  "update": {
+    "success": "PMを更新しました"
+  },
+  "delete": {
+    "success": "PMを削除しました",
+    "noInfo": "削除するPM情報がありません",
+    "deleteSuccess": "PM情報を削除しました"
+  },
+  "autoSearch": {
+    "success": "PMの検索に成功しました",
+    "failed": "PMの検索に失敗しました"
+  } 
+}

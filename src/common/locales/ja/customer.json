@@ -1,0 +1,29 @@
+{
+  "notFound": "顧客が見つかりません",
+  "alreadyExists": "顧客は既に存在します",
+  "noPersonalInfo": "このアカウントには個人情報がありません",
+  "notCreated": "この顧客はまだ作成されていません",
+  "serverError": "サーバーエラー：{{message}}",
+  "create": {
+    "success": "顧客を追加しました",
+    "error": "顧客の作成に失敗しました：{{message}}"
+  },
+  "getAll": {
+    "success": "全ての顧客を取得しました",
+    "error": "顧客一覧の取得に失敗しました"
+  },
+  "getByUserId": {
+    "success": "顧客情報を取得しました"
+  },
+  "update": {
+    "success": "顧客情報を更新しました"
+  },
+  "delete": {
+    "success": "顧客を削除しました",
+    "noInfo": "削除する顧客情報がありません",
+    "deleteSuccess": "顧客情報を削除しました"
+  },
+  "getPagination": {
+    "success": "顧客一覧を取得しました"
+  }
+}

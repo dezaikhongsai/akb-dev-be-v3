@@ -1,0 +1,46 @@
+{
+    "create": {
+        "success": "Tạo dự án thành công",
+        "error": "Tạo dự án thất bại"
+    },
+    "update": {
+        "success": "Cập nhật dự án thành công",
+        "error": "Cập nhật dự án thất bại"
+    },
+    "delete": {
+        "success": "Xóa dự án thành công",
+        "error": "Xóa dự án thất bại"
+    },
+    "getAll": {
+        "success": "Lấy danh sách dự án thành công"
+    },
+    "getById": {
+        "success": "Lấy thông tin dự án thành công"
+    },
+    "getByCustomerId": {
+        "success": "Lấy danh sách dự án của khách hàng thành công"
+    },
+    "active": {
+        "success": "Kích hoạt dự án thành công",
+        "error": "Kích hoạt dự án thất bại"
+    },
+    "addDocumentToProject": {
+        "success": "Thêm tài liệu vào dự án thành công",
+        "error": "Thêm tài liệu vào dự án thất bại"
+    },
+    "statistc": {
+        "success": "Thống kê dự án thành công",
+        "error": "Thống kê dự án thất bại"
+    },
+    "errors": {
+        "notFound": "Không tìm thấy dự án",
+        "invalidTimeFilter": "Định dạng bộ lọc thời gian không hợp lệ. Yêu cầu: loại (tháng/quý), năm và giá trị",
+        "invalidTimeFilterType": "Loại bộ lọc thời gian phải là \"month\" hoặc \"quarter\"",
+        "invalidMonth": "Giá trị tháng phải từ 1 đến 12",
+        "invalidQuarter": "Giá trị quý phải từ 1 đến 4",
+        "invalidTimeFilterFormat": "Định dạng JSON của bộ lọc thời gian không hợp lệ",
+        "invalidPagination": "Trang và giới hạn phải là số dương",
+        "accessDenied": "Ngoài quyền sở hữu tài nguyên",
+        "serverError": "Đã xảy ra lỗi từ máy chủ"
+    }
+}

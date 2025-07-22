@@ -1,0 +1,46 @@
+{
+    "create": {
+        "success": "プロジェクトを作成しました",
+        "error": "プロジェクトの作成に失敗しました"
+    },
+    "update": {
+        "success": "プロジェクトを更新しました",
+        "error": "プロジェクトの更新に失敗しました"
+    },
+    "delete": {
+        "success": "プロジェクトを削除しました",
+        "error": "プロジェクトの削除に失敗しました"
+    },
+    "getAll": {
+        "success": "プロジェクト一覧の取得に成功しました"
+    },
+    "getById": {
+        "success": "プロジェクト情報の取得に成功しました"
+    },
+    "getByCustomerId": {
+        "success": "顧客のプロジェクト一覧の取得に成功しました"
+    },
+    "active": {
+        "success": "プロジェクトを有効化しました",
+        "error": "プロジェクトの有効化に失敗しました"
+    },
+    "addDocumentToProject": {
+        "success": "プロジェクトにドキュメントを追加しました",
+        "error": "プロジェクトへのドキュメント追加に失敗しました"
+    },
+    "statistc": {
+        "success": "プロジェクト統計の取得に成功しました",
+        "error": "プロジェクト統計の取得に失敗しました"
+    },
+    "errors": {
+        "notFound": "プロジェクトが見つかりません",
+        "invalidTimeFilter": "無効な時間フィルター形式です。必須: タイプ (月/四半期)、年、値",
+        "invalidTimeFilterType": "時間フィルタータイプは \"month\" または \"quarter\" である必要があります",
+        "invalidMonth": "月の値は1から12の間である必要があります",
+        "invalidQuarter": "四半期の値は1から4の間である必要があります",
+        "invalidTimeFilterFormat": "時間フィルターのJSONフォーマットが無効です",
+        "invalidPagination": "ページと制限は正の数である必要があります",
+        "accessDenied": "リソースへのアクセス権限がありません",
+        "serverError": "サーバーエラーが発生しました"
+    }
+}

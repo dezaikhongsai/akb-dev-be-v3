@@ -1,0 +1,26 @@
+{
+    "getPhase": {
+        "success": "フェーズ情報の取得に成功しました",
+        "not_found": "フェーズが見つかりません"
+    },
+    "createPhase": {
+        "success": "フェーズの作成に成功しました",
+        "failed": "フェーズの作成に失敗しました"
+    },
+    "updatePhase": {
+        "success": "フェーズの更新に成功しました",
+        "failed": "フェーズの更新に失敗しました"
+    },
+    "deletePhase": {
+        "success": "フェーズの削除に成功しました",
+        "failed": "フェーズの削除に失敗しました"
+    },
+    "errors": {
+        "missing_fields": "必須フィールドが不足しています",
+        "invalid_project": "プロジェクトが無効です",
+        "server_error": "サーバーエラーが発生しました"
+    },
+    "notification": {
+        "phase_changed": "フェーズが変更されました"
+    }
+} 

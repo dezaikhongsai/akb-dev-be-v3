@@ -1,0 +1,29 @@
+{
+  "notFound": "Không tìm thấy khách hàng",
+  "alreadyExists": "Khách hàng đã tồn tại",
+  "noPersonalInfo": "Tài khoản này chưa có thông tin cá nhân",
+  "notCreated": "Khách hàng này chưa được tạo",
+  "serverError": "Lỗi server: {{message}}",
+  "create": {
+    "success": "Thêm khách hàng thành công",
+    "error": "Lỗi khi tạo khách hàng: {{message}}"
+  },
+  "getAll": {
+    "success": "Lấy tất cả khách hàng thành công",
+    "error": "Lỗi khi lấy tất cả khách hàng"
+  },
+  "getByUserId": {
+    "success": "Lấy thông tin khách hàng thành công"
+  },
+  "update": {
+    "success": "Cập nhật thông tin khách hàng thành công"
+  },
+  "delete": {
+    "success": "Xóa khách hàng thành công",
+    "noInfo": "Không có thông tin khách hàng cần xóa",
+    "deleteSuccess": "Xóa thông tin khách hàng thành công"
+  },
+  "getPagination": {
+    "success": "Lấy danh sách khách hàng thành công"
+  }
+}

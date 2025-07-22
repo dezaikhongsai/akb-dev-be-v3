@@ -1,0 +1,25 @@
+{
+    "createUser": {
+        "error": "Tạo mới người dùng thất bại !",
+        "success": "Tạo mới người dùng thành công !",
+        "exists": "Người dùng đã tồn tại !"
+    },
+    "updateUser": {
+        "error": "Cập nhật thông tin người dùng thất bại !",
+        "success": "Cập nhật thông tin người dùng thành công !",
+        "notFound": "Người dùng không tồn tại !",
+        "emailExists": "Email đã tồn tại !",
+        "noPermission": "Bạn không có quyền cập nhật thông tin người dùng khác !",
+        "noRoleChange": "Bạn không có quyền thay đổi role hoặc trạng thái active !",
+        "pmNoAdmin": "PM không có quyền cập nhật thông tin của admin !",
+        "pmNoSetAdmin": "PM không có quyền set role admin !"
+    },
+    "deleteUser": {
+        "error": "Xóa người dùng thất bại !",
+        "success": "Xóa người dùng thành công !",
+        "notFound": "Người dùng không tồn tại !"
+    },
+    "getUser": {
+        "success": "Lấy danh sách người dùng thành công !"
+    }
+}

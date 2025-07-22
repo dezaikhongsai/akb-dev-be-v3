@@ -1,0 +1,28 @@
+{
+    "upload": {
+        "success": "Tải tài liệu thành công",
+        "failed": "Tải tài liệu thất bại",
+        "no_files": "Không có file nào được tải lên"
+    },
+    "get": {
+        "success": "Lấy tài liệu thành công",
+        "not_found": "Không tìm thấy tài liệu"
+    },
+    "delete": {
+        "success": "Xóa tài liệu thành công",
+        "failed": "Xóa tài liệu thất bại"
+    },
+    "update": {
+        "success": "Cập nhật tài liệu thành công",
+        "failed": "Cập nhật tài liệu thất bại",
+        "status_success": "Cập nhật trạng thái thành công"
+    },
+    "download": {
+        "not_found": "File không tồn tại",
+        "failed": "Lỗi khi tải file"
+    },
+    "errors": {
+        "server_error": "Đã xảy ra lỗi từ máy chủ",
+        "missing_fields": "Thiếu thông tin bắt buộc"
+    }
+}

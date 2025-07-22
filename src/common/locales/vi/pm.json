@@ -1,0 +1,27 @@
+{
+  "notFound": "Không tìm thấy PM",
+  "noPersonalInfo": "Tài khoản này chưa có thông tin cá nhân",
+  "notCreated": "PM này chưa được tạo",
+  "alreadyExists": "PM đã tồn tại",
+  "create": {
+    "success": "Tạo PM thành công"
+  },
+  "getAll": {
+    "success": "Lấy tất cả PM thành công"
+  },
+  "getByUserId": {
+    "success": "Lấy PM theo userId thành công"
+  },
+  "update": {
+    "success": "Cập nhật PM thành công"
+  },
+  "delete": {
+    "success": "Xóa PM thành công",
+    "noInfo": "Không có thông tin PM cần xóa",
+    "deleteSuccess": "Xóa thông tin PM thành công"
+  },
+  "autoSearch": {
+    "success": "Tìm kiếm PM thành công",
+    "failed": "Tìm kiếm PM thất bại"
+  }
+}

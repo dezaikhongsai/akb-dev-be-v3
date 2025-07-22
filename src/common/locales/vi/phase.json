@@ -1,0 +1,26 @@
+{
+    "getPhase": {
+        "success": "Lấy thông tin giai đoạn thành công",
+        "not_found": "Không tìm thấy giai đoạn"
+    },
+    "createPhase": {
+        "success": "Tạo giai đoạn thành công",
+        "failed": "Tạo giai đoạn thất bại"
+    },
+    "updatePhase": {
+        "success": "Cập nhật giai đoạn thành công",
+        "failed": "Cập nhật giai đoạn thất bại"
+    },
+    "deletePhase": {
+        "success": "Xóa giai đoạn thành công",
+        "failed": "Xóa giai đoạn thất bại"
+    },
+    "errors": {
+        "missing_fields": "Thiếu thông tin bắt buộc",
+        "invalid_project": "Dự án không hợp lệ",
+        "server_error": "Đã xảy ra lỗi từ máy chủ"
+    },
+    "notification": {
+        "phase_changed": "Giai đoạn đã được thay đổi"
+    }
+} 

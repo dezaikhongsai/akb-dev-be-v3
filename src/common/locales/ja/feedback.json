@@ -1,0 +1,30 @@
+{
+    "feedback": {
+        "create": {
+            "success": "フィードバックを作成しました",
+            "failed": "フィードバックの作成に失敗しました"
+        },
+        "getAll": {
+            "success": "フィードバック一覧の取得に成功しました",
+            "failed": "フィードバック一覧の取得に失敗しました"
+        },
+        "update": {
+            "success": "フィードバックを更新しました",
+            "failed": "フィードバックの更新に失敗しました"
+        },
+        "delete": {
+            "success": "フィードバックを削除しました",
+            "failed": "フィードバックの削除に失敗しました"
+        }
+    },
+    "errors": {
+        "not_found": "フィードバックが見つかりません",
+        "project_not_found": "プロジェクトが見つかりません",
+        "missing_fields": "必須フィールドが不足しています",
+        "server_error": "サーバーエラーが発生しました"
+    },
+    "notification": {
+        "new_feedback": "顧客から新しいフィードバックがあります",
+        "feedback_updated": "フィードバックが更新されました"
+    }
+} 
