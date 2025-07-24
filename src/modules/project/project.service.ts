@@ -198,8 +198,6 @@ export const getProjectPagination = async (req : Request , query : IProjectQuery
                 }
             }
         }
-
-        // Apply date filters to both startDate and endDate if they exist
         if (Object.keys(dateFilter).length > 0) {
             filter.$or = [
                 { startDate: dateFilter },
@@ -663,13 +661,24 @@ export const getProjectById = async (projectId : string) => {
             name : '',
         }
         if(!phase) throw new ApiError(HTTP_STATUS.ERROR.NOT_FOUND , 'Không tìm thấy giai đoạn !');
-        const documents = await getDocumentInProject(projectId , query);
         const projectData = {
             project : project,
-            phases : phase,
-            documents : documents
-        }
+            phases : phase,        }
         return projectData;
+    } catch (error : any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
+    }
+}
+
+export const activeProject = async (req : Request , projectId : string) => {
+    try {
+        const userId = req.user?._id;
+        const userRole = req.user?.role;
+        const project = await Project.findById(projectId);
+        if(userRole === 'pm' && project?.pm !== userId) throw new ApiError(HTTP_STATUS.ERROR.FORBIDDEN , 'Bạn không có quyền kích hoạt dự án này !');
+        const newProject = await Project.findByIdAndUpdate(projectId , {isActive : true , status : 'processing'} , {new : true});
+        if(!newProject) throw new ApiError(HTTP_STATUS.ERROR.NOT_FOUND , 'Không tìm thấy dự án !');
+        return newProject;
     } catch (error : any) {
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
     }

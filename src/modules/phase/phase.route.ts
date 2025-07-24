@@ -19,7 +19,7 @@ router.post('/create', validateRequest(createPhaseSchema), createPhaseController
 router.post('/create-many', createManyPhaseController);
 router.get('/get-by-project-id/:projectId', getPhaseByProjectIdController);
 router.patch('/update/:phaseId', validateRequest(updatePhaseSchema), updatePhaseController);
-router.patch('/update-many', validateRequest(updateManyPhaseSchema), updateManyPhaseController);
+router.patch('/update-many', updateManyPhaseController);
 router.delete('/delete/:phaseId', deletePhaseController);
 router.delete('/delete-all-by-project-id/:projectId', deleteAllPhaseByProjectIdController);
 

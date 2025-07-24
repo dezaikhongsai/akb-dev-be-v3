@@ -7,7 +7,8 @@ import {
     getProjectPagination,
     updateProject,
     getProjectStatistics,
-    getProjectById
+    getProjectById,
+    activeProject
 } from './project.service';
 import { Request, Response , NextFunction } from 'express';
 
@@ -296,6 +297,21 @@ export const getProjectByIdController = async (req : Request , res : Response , 
         const response : ApiResponse<typeof project> = {
             status : 'success',
             message : req.t('project:messages.get_success' , {ns : 'project'}),
+            data : project,
+        }
+        res.status(HTTP_STATUS.SUCCESS.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const activeProjectController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        const {projectId} = req.params;
+        const project = await activeProject(req , projectId);
+        const response : ApiResponse<typeof project> = {
+            status : 'success',
+            message : req.t('project:messages.active_success' , {ns : 'project'}),
             data : project,
         }
         res.status(HTTP_STATUS.SUCCESS.OK).json(response);
