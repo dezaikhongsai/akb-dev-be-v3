@@ -45,6 +45,7 @@ export const createDocument = async (
             type: documentData.type,
             name: documentData.name,
             contents: contents,
+            isCompleted : documentData.type !=='request' ? true : false  ,
             createdBy: req.user?._id,
             updatedBy: req.user?._id,
             createdAt: new Date(),
@@ -138,7 +139,7 @@ export const addContentToDocument = async (
 
 export const getDocumentInProject = async (projectId: string, query: IGetDocumentInProjectQuery) => {
     try {
-        const { page = 1, limit = 10, sort, search, type, name } = query;
+        const { page = 1, limit = 10, sort, search, type, name , isCompleted } = query;
         
         // Build query conditions
         const conditions: any = { projectId };
@@ -151,6 +152,15 @@ export const getDocumentInProject = async (projectId: string, query: IGetDocumen
         // Add name search if specified
         if (name) {
             conditions.name = { $regex: name, $options: 'i' };
+        }
+
+        // Add isCompleted filter if specified (as string)
+        if (typeof isCompleted === 'string') {
+            if (isCompleted === 'true') {
+                conditions.isCompleted = true;
+            } else if (isCompleted === 'false') {
+                conditions.isCompleted = false;
+            }
         }
 
         // Build sort options
@@ -380,5 +390,19 @@ export const deleteContent = async (req: Request, contentId: string) => {
             throw error;
         }
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
+    }
+}
+
+export const changeIsCompleted = async (req : Request , documentId : string) => {
+    try {
+        const userId = req.user?._id;
+        const userRole = req.user?.role;
+        const doc = await Document.findById(documentId);
+        if(userRole === 'customer' && userId != doc?.createdBy) throw new ApiError(HTTP_STATUS.ERROR.FORBIDDEN , 'Bạn không có quyền chỉnh sửa thông tin !');
+        const newIsCompleted = !doc?.isCompleted;
+        const updatedDoc = await Document.findByIdAndUpdate(documentId , {isCompleted : newIsCompleted} , {new :true});
+        return updatedDoc;
+    } catch (error : any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER , error.message)
     }
 }

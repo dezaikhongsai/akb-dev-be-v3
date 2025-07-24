@@ -75,6 +75,7 @@ export interface IGetDocumentInProjectQuery {
     search : string;
     type ?: string;
     name : string;
+    isCompleted? : string | boolean;
     createdBy ?: string | ObjectId;
     createdAt ?: string | Date;
 }

@@ -16,7 +16,8 @@ import {
     deleteDocument, 
     getDocumentInProject, 
     updateContent, 
-    updateDocument 
+    updateDocument,
+    changeIsCompleted
 } from './document.service';
 import { Document } from './document.model';
 import fs from 'fs';
@@ -182,7 +183,7 @@ export const addContentToDocumentController = async (req: Request, res: Response
 export const getDocumentInProjectController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {projectId} = req.params;
-        const {page , limit , sort , search , type , name , createdBy , createdAt} = req.query;
+        const {page , limit , sort , search , type , name , createdBy , createdAt , isCompleted} = req.query;
         const query : IGetDocumentInProjectQuery = {
             page : Number(page),
             limit : Number(limit),
@@ -190,6 +191,7 @@ export const getDocumentInProjectController = async (req: Request, res: Response
             search : search as string,
             type : type as string,
             name : name as string,
+            isCompleted : isCompleted as string, // truyền đúng dạng string
             createdBy : createdBy as string,
             createdAt : createdAt as string,
         }
@@ -358,6 +360,20 @@ export const downloadFileController = async (req : Request , res : Response , ne
             message: req.t('downloadFile.success', {ns: 'document'}),
             data: null
         });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const changeIsCompletedController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        const {documentId} = req.params;
+        const doc = await changeIsCompleted(req , documentId);
+        res.status(HTTP_STATUS.SUCCESS.OK).json({
+            status : 'success',
+            message : req.t('document.update', {ns: 'document'}),
+            data : doc
+        } as ApiResponse<typeof doc>)
     } catch (error) {
         next(error);
     }
