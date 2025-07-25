@@ -229,10 +229,10 @@ export const getProjectPagination = async (req : Request , query : IProjectQuery
 
         // Add search condition
         if (search) {
-            filter.name = {
-                $regex: search,
-                $options: 'i'
-            };
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { alias: { $regex: search, $options: 'i' } }
+            ];
         }
 
         // Calculate skip value for pagination
@@ -657,7 +657,8 @@ export const getProjectById = async (projectId : string) => {
             page : 1,
             limit : 10,
             sort : 'asc',
-            search : '',            type : '',
+            search : '',            
+            type : '',
             name : '',
         }
         if(!phase) throw new ApiError(HTTP_STATUS.ERROR.NOT_FOUND , 'Không tìm thấy giai đoạn !');
