@@ -8,7 +8,8 @@ import {
     updateProject,
     getProjectStatistics,
     getProjectById,
-    activeProject
+    activeProject,
+    projectDetailStatistics
 } from './project.service';
 import { Request, Response , NextFunction } from 'express';
 
@@ -317,5 +318,19 @@ export const activeProjectController = async (req : Request , res : Response , n
         res.status(HTTP_STATUS.SUCCESS.OK).json(response);
     } catch (error) {
         next(error);
+    }
+}
+
+export const projectDetailStatisticsController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        const {projectId} = req.params;
+        const data = await projectDetailStatistics(req ,projectId);
+        res.status(HTTP_STATUS.SUCCESS.OK).json({
+            status : 'success',
+            message : 'Lấy thống kê chi tiết dự án thành công !',
+            data : data
+        } as ApiResponse<typeof data>)
+    } catch (error) {
+        
     }
 }

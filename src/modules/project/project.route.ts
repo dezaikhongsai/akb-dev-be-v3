@@ -1,5 +1,5 @@
 import express from 'express';
-import { activeProjectController, createProjectController, deleteProjectController, getAutoSearchProjectController, getProjectByIdController, getProjectPaginationController, getProjectStatisticsController, updateProjectController } from './project.controller';
+import { activeProjectController, createProjectController, deleteProjectController, getAutoSearchProjectController, getProjectByIdController, getProjectPaginationController, getProjectStatisticsController, projectDetailStatisticsController, updateProjectController } from './project.controller';
 import { verifyToken } from '../../common/middlewares';
 import { projectUpdateValidation, projectValidation } from './dto';
 import { validateRequest } from '../../common/middlewares';
@@ -17,4 +17,5 @@ router.delete('/delete/:projectId' , authorize('admin' , 'pm'), validateRequest(
 router.get('/auto-search' , getAutoSearchProjectController);
 router.get('/statistics' , getProjectStatisticsController); 
 router.patch('/active/:projectId' , authorize('admin' , 'pm') , activeProjectController);
+router.get('/statistics-detail/:projectId' , projectDetailStatisticsController);
 export default router;

@@ -95,3 +95,12 @@ export interface IProjectStatistics {
         };
     };
 }
+
+export interface IProjectDetailStatistics {
+    project : IProject;
+    totalDoc : number;
+    totalReport : number;
+    totalRequest : number;
+    totalDocument : number;
+    totalNewRequest : number;    
+}

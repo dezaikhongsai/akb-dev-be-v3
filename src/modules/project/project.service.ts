@@ -8,6 +8,11 @@ import { deleteAllPhaseByProjectId, getPhaseByProjectId } from "../phase/phase.s
 import { deleteAllDocumentByProjectId, getDocumentInProject } from "../document/document.service";
 import { countPhasesByProjectId } from "../phase/phase.service";
 import { IGetDocumentInProjectQuery } from "../document/dto";
+import { Document } from "../document/document.model";
+import Phase from "../phase/phase.model";
+import dayjs from "dayjs";
+import mongoose from 'mongoose';
+const { ObjectId } = mongoose.Types;
 
 const parseDateString = (dateStr: string): Date => {
     // Try DD/MM/YYYY format
@@ -316,7 +321,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
         // If search is empty, return latest projects
         if (!search) {
             return await Project.find(baseFilter)
-                .select('name alias')
+                .select('name alias pm customer')
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
                 .sort({ createdAt: -1 })
                 .limit(10)
                 .lean();
@@ -336,7 +343,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
             ...searchFilter,
             alias: search.toUpperCase()
         })
-            .select('name alias')
+            .select('name alias pm customer')
+            .populate('pm', 'profile.name')
+            .populate('customer', 'profile.name')
             .lean();
 
         // Then find partial matches
@@ -344,7 +353,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
             ...searchFilter,
             alias: { $ne: search.toUpperCase() }
         })
-            .select('name alias')
+            .select('name alias pm customer')
+            .populate('pm', 'profile.name')
+            .populate('customer', 'profile.name')
             .sort({ alias: 1 })
             .limit(10 - exactMatches.length)
             .lean();
@@ -684,3 +695,82 @@ export const activeProject = async (req : Request , projectId : string) => {
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
     }
 }
+
+
+export const projectDetailStatistics = async (req: Request, projectId: string) => {
+  try {
+    const [project, phases, documentStatsResult] = await Promise.all([
+      Project.findById(projectId),
+      Phase.find({ projectId }).sort({ startDate: 1 }),
+      Document.aggregate([
+        {
+          $match: { projectId: new ObjectId(projectId) }  
+        },
+        {
+          $facet: {
+            total: [{ $count: 'count' }],
+            reports: [{ $match: { type: 'report' } }, { $count: 'count' }],
+            requests: [{ $match: { type: 'request' } }, { $count: 'count' }],
+            newRequests: [
+              { $match: { isCompleted: false } },
+              { $count: 'count' },
+            ],
+          },
+        },
+        {
+          $project: {
+            total: { $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0] },
+            reports: { $ifNull: [{ $arrayElemAt: ['$reports.count', 0] }, 0] },
+            requests: { $ifNull: [{ $arrayElemAt: ['$requests.count', 0] }, 0] },
+            newRequests: { $ifNull: [{ $arrayElemAt: ['$newRequests.count', 0] }, 0] },
+          },
+        },
+      ]),
+    ]);
+
+    if (!project) throw new ApiError(HTTP_STATUS.ERROR.BAD_REQUEST, 'Không tìm thấy dự án');
+
+    const docStats = documentStatsResult[0] || {
+      total: 0,
+      reports: 0,
+      requests: 0,
+      newRequests: 0,
+    };
+
+    const totalDocument = docStats.total - docStats.reports - docStats.requests;
+    const latestTimePhase = phases.length > 0
+      ? dayjs(phases[phases.length - 1].startDate).format('DD/MM/YYYY')
+      : null;
+
+    const nowDate = dayjs().format('DD/MM/YYYY');
+    const docCompleted = await Document.countDocuments({isCompleted : true});
+    return {
+      currentPhase: project.currentPhase,
+      totalDocument,
+      totalPhase: phases.length,
+      totalReport: docStats.reports,
+      totalRequest: docStats.requests,
+      totalNewRequest: docStats.newRequests,
+      totalDocCompleted: docCompleted,
+      latestTimePhase,
+      nowDate,
+      startDateProject: dayjs(project.startDate).format('DD/MM/YYYY'),
+    };
+  } catch (error: any) {
+    throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
+  }
+};
+
+export const statisticsRequestInProject = async (req : Request ) => {
+    try {
+        const userId = req.user?._id
+        const role = req.user?.role;
+        let project;
+        if(role === 'customer') project = await Project.find({customer : userId});
+        else project = await Project.find();
+    } catch (error :any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER , error.message)
+    }
+}
+
+
