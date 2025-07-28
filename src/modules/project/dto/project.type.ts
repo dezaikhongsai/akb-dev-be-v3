@@ -104,3 +104,43 @@ export interface IProjectDetailStatistics {
     totalDocument : number;
     totalNewRequest : number;    
 }
+
+export interface IIncompleteDocument {
+    _id: string;
+    name: string;
+    type: 'document' | 'report' | 'request';
+    isCompleted: boolean;
+    contents: any[];
+    createdAt: Date;
+    updatedAt: Date;
+    createdBy: {
+        _id: string;
+        name: string;
+    };
+    updatedBy: {
+        _id: string;
+        name: string;
+    };
+}
+
+export interface IProjectRequestStatistics {
+    projectId: string;
+    projectName: string;
+    projectAlias: string;
+    pm: {
+        _id: string;
+        name: string;
+    };
+    customer: {
+        _id: string;
+        name: string;
+    };
+    totalDocuments: number;
+    incompleteDocuments: number;
+    incompleteDocumentsList: IIncompleteDocument[];
+}
+
+export interface IStatisticsRequestResponse {
+    success: boolean;
+    data: IProjectRequestStatistics[];
+}

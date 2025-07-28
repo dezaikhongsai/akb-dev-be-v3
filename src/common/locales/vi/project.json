@@ -32,6 +32,10 @@
         "success": "Thống kê dự án thành công",
         "error": "Thống kê dự án thất bại"
     },
+    "statisticsRequest": {
+        "success": "Lấy thống kê yêu cầu trong dự án thành công",
+        "error": "Lấy thống kê yêu cầu trong dự án thất bại"
+    },
     "errors": {
         "notFound": "Không tìm thấy dự án",
         "invalidTimeFilter": "Định dạng bộ lọc thời gian không hợp lệ. Yêu cầu: loại (tháng/quý), năm và giá trị",
@@ -42,5 +46,8 @@
         "invalidPagination": "Trang và giới hạn phải là số dương",
         "accessDenied": "Ngoài quyền sở hữu tài nguyên",
         "serverError": "Đã xảy ra lỗi từ máy chủ"
+    },
+    "table": {
+        "title": "Thông tin chung"
     }
 }

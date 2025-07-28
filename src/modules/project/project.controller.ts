@@ -9,7 +9,8 @@ import {
     getProjectStatistics,
     getProjectById,
     activeProject,
-    projectDetailStatistics
+    projectDetailStatistics,
+    statisticsRequestInProject
 } from './project.service';
 import { Request, Response , NextFunction } from 'express';
 
@@ -331,6 +332,80 @@ export const projectDetailStatisticsController = async (req : Request , res : Re
             data : data
         } as ApiResponse<typeof data>)
     } catch (error) {
+        next(error);
+    }
+}
+
+export const statisticsRequestInProjectController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        // Lấy query parameters
+        let { monthYearStart, monthYearEnd } = req.query as { monthYearStart?: string; monthYearEnd?: string };
         
+        // Nếu không có monthYearStart và monthYearEnd, tự động set tháng năm hiện tại
+        if (!monthYearStart && !monthYearEnd) {
+            const now = new Date();
+            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            const currentYear = now.getFullYear().toString();
+            const currentMonthYear = `${currentMonth}/${currentYear}`;
+            
+            monthYearStart = currentMonthYear;
+            monthYearEnd = currentMonthYear;
+        } else if (!monthYearStart && monthYearEnd) {
+            // Nếu chỉ có monthYearEnd, set monthYearStart = monthYearEnd
+            monthYearStart = monthYearEnd;
+        } else if (monthYearStart && !monthYearEnd) {
+            // Nếu chỉ có monthYearStart, set monthYearEnd = monthYearStart
+            monthYearEnd = monthYearStart;
+        }
+
+        // Đảm bảo cả hai giá trị đều có sau khi xử lý
+        if (!monthYearStart || !monthYearEnd) {
+            throw new ApiError(
+                HTTP_STATUS.ERROR.BAD_REQUEST,
+                'Vui lòng cung cấp đầy đủ thông tin thời gian'
+            );
+        }
+
+        // Validate monthYear format
+        const validateMonthYear = (monthYear: string): boolean => {
+            const regex = /^(0[1-9]|1[0-2])\/\d{4}$/;
+            return regex.test(monthYear);
+        };
+
+        if (!validateMonthYear(monthYearStart)) {
+            throw new ApiError(
+                HTTP_STATUS.ERROR.BAD_REQUEST,
+                'Định dạng monthYearStart không hợp lệ. Sử dụng định dạng MM/YYYY (ví dụ: 01/2024)'
+            );
+        }
+        if (!validateMonthYear(monthYearEnd)) {
+            throw new ApiError(
+                HTTP_STATUS.ERROR.BAD_REQUEST,
+                'Định dạng monthYearEnd không hợp lệ. Sử dụng định dạng MM/YYYY (ví dụ: 12/2024)'
+            );
+        }
+
+        // Validate that start date is not after end date
+        const [startMonth, startYear] = monthYearStart.split('/');
+        const [endMonth, endYear] = monthYearEnd.split('/');
+        const startDate = new Date(parseInt(startYear), parseInt(startMonth) - 1);
+        const endDate = new Date(parseInt(endYear), parseInt(endMonth) - 1);
+        
+        if (startDate > endDate) {
+            throw new ApiError(HTTP_STATUS.ERROR.BAD_REQUEST, 'monthYearStart không thể sau monthYearEnd');
+        }
+
+        // Cập nhật req.query với giá trị đã xử lý
+        req.query.monthYearStart = monthYearStart;
+        req.query.monthYearEnd = monthYearEnd;
+
+        const data = await statisticsRequestInProject(req);
+        res.status(HTTP_STATUS.SUCCESS.OK).json({
+            status : 'success',
+            message : req.t('project:statisticsRequest.success', {ns : 'project'}),
+            data : data
+        } as ApiResponse<typeof data>)
+    } catch (error) {
+        next(error);
     }
 }

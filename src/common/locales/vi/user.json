@@ -21,5 +21,15 @@
     },
     "getUser": {
         "success": "Lấy danh sách người dùng thành công !"
+    },
+    "statisticUserProject": {
+        "success": "Lấy thống kê project của người dùng thành công !"
+    },
+    "searchUser": {
+        "success": "Tìm kiếm người dùng thành công !"
+    },
+    "me": {
+        "success": "Lấy thông tin người dùng thành công !",
+        "notFound": "Người dùng không tồn tại !"
     }
 }

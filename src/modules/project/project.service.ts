@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { IProject, IProjectQuery, IProjectUpdate, IProjectStatisticsQuery, IProjectStatistics, IProjectProgress } from "./dto";
+import { IProject, IProjectQuery, IProjectUpdate, IProjectStatisticsQuery, IProjectStatistics, IProjectProgress, IStatisticsRequestResponse } from "./dto";
 import Project from "./project.model";
 import { ApiError, HTTP_STATUS } from "../../common/constants";
 import { SortOrder } from "mongoose";
@@ -743,7 +743,7 @@ export const projectDetailStatistics = async (req: Request, projectId: string) =
       : null;
 
     const nowDate = dayjs().format('DD/MM/YYYY');
-    const docCompleted = await Document.countDocuments({isCompleted : true});
+    const docCompleted = await Document.countDocuments({isCompleted : true , projectId : projectId});
     return {
       currentPhase: project.currentPhase,
       totalDocument,
@@ -761,13 +761,151 @@ export const projectDetailStatistics = async (req: Request, projectId: string) =
   }
 };
 
-export const statisticsRequestInProject = async (req : Request ) => {
+export const statisticsRequestInProject = async (req : Request ): Promise<IStatisticsRequestResponse> => {
     try {
-        const userId = req.user?._id
+        const userId = req.user?._id;
         const role = req.user?.role;
-        let project;
-        if(role === 'customer') project = await Project.find({customer : userId});
-        else project = await Project.find();
+        
+        // Lấy query parameters cho filtering
+        const { monthYearStart, monthYearEnd } = req.query as { monthYearStart?: string; monthYearEnd?: string };
+        
+        // Helper function để xử lý date range
+        const processDateRange = (monthYearStart?: string, monthYearEnd?: string) => {
+            let startDate: Date;
+            let endDate: Date;
+
+            if (monthYearStart && monthYearEnd) {
+                // Có cả start và end
+                const [startMonth, startYear] = monthYearStart.split('/');
+                const [endMonth, endYear] = monthYearEnd.split('/');
+                startDate = new Date(parseInt(startYear), parseInt(startMonth) - 1, 1);
+                endDate = new Date(parseInt(endYear), parseInt(endMonth), 0, 23, 59, 59);
+            } else if (monthYearStart) {
+                // Chỉ có start
+                const [month, year] = monthYearStart.split('/');
+                startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+            } else if (monthYearEnd) {
+                // Chỉ có end
+                const [month, year] = monthYearEnd.split('/');
+                startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+            } else {
+                // Không có date filter
+                return null;
+            }
+
+            return { startDate, endDate };
+        };
+
+        // Xử lý date range
+        const dateRange = processDateRange(monthYearStart, monthYearEnd);
+        
+        // Build filter conditions
+        const filter: any = {};
+        
+        // Thêm date filter nếu có
+        if (dateRange) {
+            filter.$or = [
+                {
+                    startDate: {
+                        $gte: dateRange.startDate,
+                        $lte: dateRange.endDate
+                    }
+                },
+                {
+                    endDate: {
+                        $gte: dateRange.startDate,
+                        $lte: dateRange.endDate
+                    }
+                },
+                {
+                    $and: [
+                        { startDate: { $lte: dateRange.startDate } },
+                        { endDate: { $gte: dateRange.endDate } }
+                    ]
+                }
+            ];
+        }
+        
+        // Lấy danh sách dự án dựa trên role và filter
+        let projects;
+        if(role === 'customer') {
+            filter.customer = userId;
+            projects = await Project.find(filter)
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
+                .lean();
+        } else {
+            projects = await Project.find(filter)
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
+                .lean();
+        }
+
+        // Lấy thống kê document cho từng dự án
+        const projectsWithStats = await Promise.all(
+            projects.map(async (project) => {
+                // Đếm tổng số document trong dự án
+                const totalDocuments = await Document.countDocuments({ 
+                    projectId: project._id 
+                });
+
+                // Đếm số document chưa hoàn thành
+                const incompleteDocuments = await Document.countDocuments({ 
+                    projectId: project._id,
+                    isCompleted: false 
+                });
+
+                // Lấy danh sách document chưa hoàn thành với thông tin chi tiết
+                const incompleteDocumentsList = await Document.find({ 
+                    projectId: project._id,
+                    isCompleted: false 
+                })
+                .populate('createdBy', 'profile.name')
+                .populate('updatedBy', 'profile.name')
+                .lean();
+
+                return {
+                    projectId: project._id.toString(),
+                    projectName: project.name,
+                    projectAlias: project.alias,
+                    pm: {
+                        _id: (project.pm as any)?._id?.toString() || '',
+                        name: (project.pm as any)?.profile?.name || 'Unknown PM'
+                    },
+                    customer: {
+                        _id: (project.customer as any)?._id?.toString() || '',
+                        name: (project.customer as any)?.profile?.name || 'Unknown Customer'
+                    },
+                    totalDocuments,
+                    incompleteDocuments,
+                    incompleteDocumentsList: incompleteDocumentsList.map(doc => ({
+                        _id: doc._id.toString(),
+                        name: doc.name,
+                        type: doc.type,
+                        isCompleted: doc.isCompleted || false,
+                        contents: doc.contents,
+                        createdAt: doc.createdAt,
+                        updatedAt: doc.updatedAt,
+                        createdBy: {
+                            _id: (doc.createdBy as any)?._id?.toString() || '',
+                            name: (doc.createdBy as any)?.profile?.name || 'Unknown User'
+                        },
+                        updatedBy: {
+                            _id: (doc.updatedBy as any)?._id?.toString() || '',
+                            name: (doc.updatedBy as any)?.profile?.name || 'Unknown User'
+                        }
+                    }))
+                };
+            })
+        );
+
+        return {
+            success: true,
+            data: projectsWithStats
+        };
+
     } catch (error :any) {
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER , error.message)
     }

@@ -7,7 +7,8 @@ import {
     me,
     statisticUser,
     updateUser,
-    autoSearchUser
+    autoSearchUser,
+    statisticUserProject
 } from './user.service';
 import {Request , Response , NextFunction} from 'express';
 
@@ -153,6 +154,23 @@ export const autoSearchUserController = async (req : Request , res : Response , 
             status : 'success',
             message : req.t('searchUser.success', {ns: 'user'}),
             data : users
+        }
+        res.status(HTTP_STATUS.SUCCESS.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const statisticUserProjectController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        const { role } = req.query;
+        const roleParam = role ? String(role) as 'customer' | 'pm' : undefined;
+        
+        const statisticData = await statisticUserProject(req, roleParam);
+        const response : ApiResponse<typeof statisticData> = {
+            status : 'success',
+            message : req.t('statisticUserProject.success', {ns: 'user'}),
+            data : statisticData
         }
         res.status(HTTP_STATUS.SUCCESS.OK).json(response);
     } catch (error) {
