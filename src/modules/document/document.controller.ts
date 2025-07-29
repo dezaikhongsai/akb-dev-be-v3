@@ -17,7 +17,8 @@ import {
     getDocumentInProject, 
     updateContent, 
     updateDocument,
-    changeIsCompleted
+    changeIsCompleted,
+    messageDocStatus
 } from './document.service';
 import { Document } from './document.model';
 import fs from 'fs';
@@ -26,6 +27,8 @@ import {
     cleanupFiles ,
     transformUploadedFiles 
 } from '../../common/utils';
+import { queueMail } from '../mail/mail';
+import Project from '../project/project.model';
 
 
 
@@ -79,12 +82,47 @@ export const createDocumentController = async (req: Request, res: Response, next
                 uploadedFiles
             );
 
+            const project = await Project.findById(result.document.projectId)
+                .populate('customer', 'profile.name profile.emailContact')
+                .populate('pm', 'profile.name profile.emailContact');
+          
+
             // Return response
             const response: ApiResponse<typeof result> = {
                 status: 'success',
                 message: req.t('createDocument.success', {ns: 'document'}),
                 data: result
             };
+
+            if(result && project) {
+                // Gửi email thông báo cho PM và Customer
+                const emailRecipients = [];
+                
+                const pmData = project.pm as any;
+                const customerData = project.customer as any;
+                
+                if (pmData?.profile?.emailContact) {
+                    emailRecipients.push(pmData.profile.emailContact);
+                }
+                
+                if (customerData?.profile?.emailContact) {
+                    emailRecipients.push(customerData.profile.emailContact);
+                }
+                
+                if (emailRecipients.length > 0) {
+                    await queueMail({
+                        to: emailRecipients.join(', '),
+                        subject: `Tài liệu mới: ${result.document.name}`,
+                        templateName: 'addDocInProject.template',
+                        templateData: {
+                            projectName: project.name,
+                            documentName: result.document.name,
+                            message: `Tài liệu ${result.document.name} đã được thêm vào dự án ${project.name}`
+                        },
+                        priority: 2
+                    }, req.user?._id as string, req);
+                }
+            }
 
             return res.status(HTTP_STATUS.SUCCESS.CREATED).json(response);
 
@@ -374,6 +412,21 @@ export const changeIsCompletedController = async (req : Request , res : Response
             message : req.t('document.update', {ns: 'document'}),
             data : doc
         } as ApiResponse<typeof doc>)
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const messageDocStatusController = async (req : Request , res : Response , next : NextFunction) => {
+    try {
+        const {projectId} = req.params;
+        const result = await messageDocStatus(req , projectId);
+        const response : ApiResponse<typeof result> = {
+            status : 'success',
+            message : req.t('messageDocStatus.success', {ns: 'document'}),
+            data : result
+        }
+        return res.status(HTTP_STATUS.SUCCESS.OK).json(response);
     } catch (error) {
         next(error);
     }

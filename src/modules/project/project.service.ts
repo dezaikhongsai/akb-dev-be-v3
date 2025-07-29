@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { IProject, IProjectQuery, IProjectUpdate, IProjectStatisticsQuery, IProjectStatistics, IProjectProgress } from "./dto";
+import { IProject, IProjectQuery, IProjectUpdate, IProjectStatisticsQuery, IProjectStatistics, IProjectProgress, IStatisticsRequestResponse } from "./dto";
 import Project from "./project.model";
 import { ApiError, HTTP_STATUS } from "../../common/constants";
 import { SortOrder } from "mongoose";
@@ -8,6 +8,11 @@ import { deleteAllPhaseByProjectId, getPhaseByProjectId } from "../phase/phase.s
 import { deleteAllDocumentByProjectId, getDocumentInProject } from "../document/document.service";
 import { countPhasesByProjectId } from "../phase/phase.service";
 import { IGetDocumentInProjectQuery } from "../document/dto";
+import { Document } from "../document/document.model";
+import Phase from "../phase/phase.model";
+import dayjs from "dayjs";
+import mongoose from 'mongoose';
+const { ObjectId } = mongoose.Types;
 
 const parseDateString = (dateStr: string): Date => {
     // Try DD/MM/YYYY format
@@ -316,7 +321,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
         // If search is empty, return latest projects
         if (!search) {
             return await Project.find(baseFilter)
-                .select('name alias')
+                .select('name alias pm customer')
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
                 .sort({ createdAt: -1 })
                 .limit(10)
                 .lean();
@@ -336,7 +343,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
             ...searchFilter,
             alias: search.toUpperCase()
         })
-            .select('name alias')
+            .select('name alias pm customer')
+            .populate('pm', 'profile.name')
+            .populate('customer', 'profile.name')
             .lean();
 
         // Then find partial matches
@@ -344,7 +353,9 @@ export const getAutoSearchProject = async (req: Request, search: string) => {
             ...searchFilter,
             alias: { $ne: search.toUpperCase() }
         })
-            .select('name alias')
+            .select('name alias pm customer')
+            .populate('pm', 'profile.name')
+            .populate('customer', 'profile.name')
             .sort({ alias: 1 })
             .limit(10 - exactMatches.length)
             .lean();
@@ -684,3 +695,220 @@ export const activeProject = async (req : Request , projectId : string) => {
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
     }
 }
+
+
+export const projectDetailStatistics = async (req: Request, projectId: string) => {
+  try {
+    const [project, phases, documentStatsResult] = await Promise.all([
+      Project.findById(projectId),
+      Phase.find({ projectId }).sort({ startDate: 1 }),
+      Document.aggregate([
+        {
+          $match: { projectId: new ObjectId(projectId) }  
+        },
+        {
+          $facet: {
+            total: [{ $count: 'count' }],
+            reports: [{ $match: { type: 'report' } }, { $count: 'count' }],
+            requests: [{ $match: { type: 'request' } }, { $count: 'count' }],
+            newRequests: [
+              { $match: { isCompleted: false } },
+              { $count: 'count' },
+            ],
+          },
+        },
+        {
+          $project: {
+            total: { $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0] },
+            reports: { $ifNull: [{ $arrayElemAt: ['$reports.count', 0] }, 0] },
+            requests: { $ifNull: [{ $arrayElemAt: ['$requests.count', 0] }, 0] },
+            newRequests: { $ifNull: [{ $arrayElemAt: ['$newRequests.count', 0] }, 0] },
+          },
+        },
+      ]),
+    ]);
+
+    if (!project) throw new ApiError(HTTP_STATUS.ERROR.BAD_REQUEST, 'Không tìm thấy dự án');
+
+    const docStats = documentStatsResult[0] || {
+      total: 0,
+      reports: 0,
+      requests: 0,
+      newRequests: 0,
+    };
+
+    const totalDocument = docStats.total - docStats.reports - docStats.requests;
+    const latestTimePhase = phases.length > 0
+      ? dayjs(phases[phases.length - 1].startDate).format('DD/MM/YYYY')
+      : null;
+
+    const nowDate = dayjs().format('DD/MM/YYYY');
+    const docCompleted = await Document.countDocuments({isCompleted : true , projectId : projectId});
+    return {
+      currentPhase: project.currentPhase,
+      totalDocument,
+      totalPhase: phases.length,
+      totalReport: docStats.reports,
+      totalRequest: docStats.requests,
+      totalNewRequest: docStats.newRequests,
+      totalDocCompleted: docCompleted,
+      latestTimePhase,
+      nowDate,
+      startDateProject: dayjs(project.startDate).format('DD/MM/YYYY'),
+    };
+  } catch (error: any) {
+    throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
+  }
+};
+
+export const statisticsRequestInProject = async (req : Request ): Promise<IStatisticsRequestResponse> => {
+    try {
+        const userId = req.user?._id;
+        const role = req.user?.role;
+        
+        // Lấy query parameters cho filtering
+        const { monthYearStart, monthYearEnd } = req.query as { monthYearStart?: string; monthYearEnd?: string };
+        
+        // Helper function để xử lý date range
+        const processDateRange = (monthYearStart?: string, monthYearEnd?: string) => {
+            let startDate: Date;
+            let endDate: Date;
+
+            if (monthYearStart && monthYearEnd) {
+                // Có cả start và end
+                const [startMonth, startYear] = monthYearStart.split('/');
+                const [endMonth, endYear] = monthYearEnd.split('/');
+                startDate = new Date(parseInt(startYear), parseInt(startMonth) - 1, 1);
+                endDate = new Date(parseInt(endYear), parseInt(endMonth), 0, 23, 59, 59);
+            } else if (monthYearStart) {
+                // Chỉ có start
+                const [month, year] = monthYearStart.split('/');
+                startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+            } else if (monthYearEnd) {
+                // Chỉ có end
+                const [month, year] = monthYearEnd.split('/');
+                startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59);
+            } else {
+                // Không có date filter
+                return null;
+            }
+
+            return { startDate, endDate };
+        };
+
+        // Xử lý date range
+        const dateRange = processDateRange(monthYearStart, monthYearEnd);
+        
+        // Build filter conditions
+        const filter: any = {};
+        
+        // Thêm date filter nếu có
+        if (dateRange) {
+            filter.$or = [
+                {
+                    startDate: {
+                        $gte: dateRange.startDate,
+                        $lte: dateRange.endDate
+                    }
+                },
+                {
+                    endDate: {
+                        $gte: dateRange.startDate,
+                        $lte: dateRange.endDate
+                    }
+                },
+                {
+                    $and: [
+                        { startDate: { $lte: dateRange.startDate } },
+                        { endDate: { $gte: dateRange.endDate } }
+                    ]
+                }
+            ];
+        }
+        
+        // Lấy danh sách dự án dựa trên role và filter
+        let projects;
+        if(role === 'customer') {
+            filter.customer = userId;
+            projects = await Project.find(filter)
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
+                .lean();
+        } else {
+            projects = await Project.find(filter)
+                .populate('pm', 'profile.name')
+                .populate('customer', 'profile.name')
+                .lean();
+        }
+
+        // Lấy thống kê document cho từng dự án
+        const projectsWithStats = await Promise.all(
+            projects.map(async (project) => {
+                // Đếm tổng số document trong dự án
+                const totalDocuments = await Document.countDocuments({ 
+                    projectId: project._id 
+                });
+
+                // Đếm số document chưa hoàn thành
+                const incompleteDocuments = await Document.countDocuments({ 
+                    projectId: project._id,
+                    isCompleted: false 
+                });
+
+                // Lấy danh sách document chưa hoàn thành với thông tin chi tiết
+                const incompleteDocumentsList = await Document.find({ 
+                    projectId: project._id,
+                    isCompleted: false 
+                })
+                .populate('createdBy', 'profile.name')
+                .populate('updatedBy', 'profile.name')
+                .lean();
+
+                return {
+                    projectId: project._id.toString(),
+                    projectName: project.name,
+                    projectAlias: project.alias,
+                    pm: {
+                        _id: (project.pm as any)?._id?.toString() || '',
+                        name: (project.pm as any)?.profile?.name || 'Unknown PM'
+                    },
+                    customer: {
+                        _id: (project.customer as any)?._id?.toString() || '',
+                        name: (project.customer as any)?.profile?.name || 'Unknown Customer'
+                    },
+                    totalDocuments,
+                    incompleteDocuments,
+                    incompleteDocumentsList: incompleteDocumentsList.map(doc => ({
+                        _id: doc._id.toString(),
+                        name: doc.name,
+                        type: doc.type,
+                        isCompleted: doc.isCompleted || false,
+                        contents: doc.contents,
+                        createdAt: doc.createdAt,
+                        updatedAt: doc.updatedAt,
+                        createdBy: {
+                            _id: (doc.createdBy as any)?._id?.toString() || '',
+                            name: (doc.createdBy as any)?.profile?.name || 'Unknown User'
+                        },
+                        updatedBy: {
+                            _id: (doc.updatedBy as any)?._id?.toString() || '',
+                            name: (doc.updatedBy as any)?.profile?.name || 'Unknown User'
+                        }
+                    }))
+                };
+            })
+        );
+
+        return {
+            success: true,
+            data: projectsWithStats
+        };
+
+    } catch (error :any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER , error.message)
+    }
+}
+
+

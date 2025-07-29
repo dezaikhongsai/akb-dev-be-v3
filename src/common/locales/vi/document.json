@@ -21,6 +21,9 @@
         "not_found": "File không tồn tại",
         "failed": "Lỗi khi tải file"
     },
+    "messageDocStatus": {
+        "success": "Lấy thống kê tài liệu thành công"
+    },
     "errors": {
         "server_error": "Đã xảy ra lỗi từ máy chủ",
         "missing_fields": "Thiếu thông tin bắt buộc"

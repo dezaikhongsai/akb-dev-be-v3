@@ -43,7 +43,7 @@ export const sendMailWithTemplate = async (
   }
 
   const transporter = createTransporter(mailConfig);
-  const filePath = `src/mails/templates/${templateName}.hbs`;
+  const filePath = `src/modules/mail/templates/${templateName}.hbs`;
   const source = fs.readFileSync(filePath, "utf8");
   const compiledTemplate = handlebars.compile(source);
   const html = compiledTemplate(data);

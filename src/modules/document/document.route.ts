@@ -8,7 +8,8 @@ import {
     deleteContentController, 
     addContentToDocumentController, 
     downloadFileController, 
-    changeIsCompletedController
+    changeIsCompletedController,
+    messageDocStatusController
 } from './document.controller';
 import { verifyToken , validateRequest } from '../../common/middlewares';
 import { createDocumentSchema , createContentSchema} from './dto/document.validation';
@@ -25,5 +26,6 @@ router.delete('/delete/:documentId',verifyToken, deleteDocumentController);
 router.delete('/delete-content/:contentId',verifyToken, deleteContentController);
 router.get('/download/:filename',verifyToken, downloadFileController);
 router.patch('/change-isCompleted/:documentId' , verifyToken , changeIsCompletedController);
+router.get('/message-doc-status/:projectId' , verifyToken , messageDocStatusController);    
 
 export default router;

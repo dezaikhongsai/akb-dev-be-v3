@@ -194,3 +194,109 @@ export const autoSearchUser = async (req: Request, search: string = '', roles: (
     }
 }
 // còn một ý thông kê khách hàng trong dự án , feedback , ... ta sẽ làm ở phần sau
+
+export const statisticUserProject = async (req: Request, role?: 'customer' | 'pm') => {
+    try {
+        // Import Project model
+        const Project = (await import('../project/project.model')).default;
+        
+        // Base query for users
+        let userQuery: any = { isActive: true };
+        if (role) {
+            userQuery.role = role;
+        }
+        
+        // Get all users with specified role
+        const users = await User.find(userQuery)
+            .select('_id alias email role profile')
+            .populate('createdBy', 'email profile.name')
+            .populate('updatedBy', 'email profile.name');
+        
+        const statistics = [];
+        
+        for (const user of users) {
+            // Query projects based on user role
+            let projectQuery: any = { isActive: true };
+            
+            if (user.role === 'customer') {
+                projectQuery.customer = user._id;
+            } else if (user.role === 'pm') {
+                projectQuery.pm = user._id;
+            }
+            
+            // Get project statistics for this user
+            const pendingProjects = await Project.countDocuments({
+                ...projectQuery,
+                status: 'pending'
+            });
+            
+            const processingProjects = await Project.countDocuments({
+                ...projectQuery,
+                status: 'processing'
+            });
+            
+            const completedProjects = await Project.countDocuments({
+                ...projectQuery,
+                status: 'completed'
+            });
+            
+            // Get list of completed projects for this user
+            const completedProjectsList = await Project.find({
+                ...projectQuery,
+                status: 'completed'
+            })
+            .select('_id name alias status startDate endDate createdAt')
+            .populate('pm', 'alias profile.name')
+            .populate('customer', 'alias profile.name')
+            .sort({ createdAt: -1 });
+            
+            // Calculate total projects
+            const totalProjects = pendingProjects + processingProjects + completedProjects;
+            
+            // Calculate percentages
+            const calculatePercent = (value: number) => {
+                if (totalProjects === 0) return 0;
+                return Number(((value / totalProjects) * 100).toFixed(2));
+            };
+            
+            statistics.push({
+                user: {
+                    _id: user._id,
+                    alias: user.alias,
+                    email: user.email,
+                    role: user.role,
+                    profile: user.profile,
+                    createdBy: user.createdBy,
+                    updatedBy: user.updatedBy
+                },
+                projectStatistics: {
+                    totalProjects,
+                    pendingProjects,
+                    processingProjects,
+                    completedProjects,
+                    percentPending: calculatePercent(pendingProjects),
+                    percentProcessing: calculatePercent(processingProjects),
+                    percentCompleted: calculatePercent(completedProjects)
+                },
+                completedProjectsList: completedProjectsList.map(project => ({
+                    _id: project._id,
+                    name: project.name,
+                    alias: project.alias,
+                    status: project.status,
+                    startDate: project.startDate,
+                    endDate: project.endDate,
+                    createdAt: project.createdAt,
+                    pm: project.pm,
+                    customer: project.customer
+                }))
+            });
+        }
+        
+        return {
+            totalUsers: users.length,
+            statistics
+        };
+    } catch (error: any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
+    }
+}

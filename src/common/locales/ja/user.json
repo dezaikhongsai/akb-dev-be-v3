@@ -21,5 +21,15 @@
     },
     "getUser": {
         "success": "ユーザーリストを取得しました！"
+    },
+    "statisticUserProject": {
+        "success": "ユーザーのプロジェクト統計を取得しました！"
+    },
+    "searchUser": {
+        "success": "ユーザー検索が完了しました！"
+    },
+    "me": {
+        "success": "ユーザー情報を取得しました！",
+        "notFound": "ユーザーが見つかりません！"
     }
 }
