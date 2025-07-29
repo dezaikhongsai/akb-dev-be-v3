@@ -8,7 +8,7 @@ import { ApiError, ApiResponse, HTTP_STATUS } from '../../common/constants';
 
 // Cải thiện logic phát hiện môi trường
 const isCloud = process.env.IS_CLOUD === 'true' || process.env.NODE_ENV === 'production';
-const isHttps = process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true';
+const isHttps = process.env.FORCE_HTTPS === 'true';
 
 // Cấu hình cookie linh hoạt hơn
 const getCookieOptions = (isSecure: boolean = false) => ({
