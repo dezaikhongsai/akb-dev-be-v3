@@ -94,3 +94,11 @@ export interface IDocumentMetadata {
     updatedBy ?: string | ObjectId;
     updatedAt ?: Date;
 }
+
+// Interface cho response thống kê tài liệu theo trạng thái
+export interface IDocumentStatusResponse {
+    document: number;
+    request: number;
+    report: number;
+    total: number;
+}

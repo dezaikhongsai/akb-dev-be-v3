@@ -39,12 +39,7 @@ const checkMailConfig = async (req: Request): Promise<boolean> => {
         return false;
     }
 };
-/**
- * Helper function to add mail to queue from backend services
- * @param mailData Mail data object
- * @param userId User ID who triggers this action
- * @returns Promise of the created mail queue or null if mail config is invalid
- */
+
 export const queueMail = async (
     mailData: MailQueueData,
     userId: string | ObjectId,
@@ -81,13 +76,27 @@ export const queueMail = async (
  */
 export const EmailTemplates = {
     // Thông báo khi tạo dự án mới
-    PROJECT_CREATED: (projectName: string, creatorName: string) => ({
-        templateName: 'projectApprove.template',
+    PROJECT_CREATED: (projectName: string, creatorName: string, link: string) => ({
+        templateName: 'projectCreated.template',
         subject: `Dự án mới: ${projectName}`,
         templateData: {
+            username: 'Bạn',
             projectName,
             creatorName,
+            link,
             message: `Dự án ${projectName} đã được tạo bởi ${creatorName}`
+        }
+    }),
+
+    // Thông báo khi phê duyệt/kích hoạt dự án
+    PROJECT_APPROVE: (projectName: string, username: string, link: string) => ({
+        templateName: 'projectApprove.template',
+        subject: `Dự án ${projectName} đã được phê duyệt`,
+        templateData: {
+            username,
+            projectName,
+            link,
+            message: `Dự án ${projectName} đã được phê duyệt và sẵn sàng để bắt đầu`
         }
     }),
 
@@ -141,6 +150,19 @@ export const EmailTemplates = {
         templateData: {
             name: projectName,
             message: `Dự án đã nhận được phản hồi mới với đánh giá ${rating}/5 sao.\nNội dung phản hồi: ${comment}`
+        }
+    }),
+
+    // Thông báo khi tạo tài khoản mới
+    ADD_NEW_USER: (username: string, email: string, password: string, link: string) => ({
+        templateName: 'addNewUser.template',
+        subject: `Tạo tài khoản mới trong hệ thống AKB`,
+        templateData: {
+            username,
+            email,
+            password,
+            link,
+            message: `Chúc mừng! Bạn đã được thêm vào hệ thống AKB.`
         }
     })
 }; 

@@ -13,6 +13,8 @@ import {
     statisticsRequestInProject
 } from './project.service';
 import { Request, Response , NextFunction } from 'express';
+import { EmailTemplates, queueMail } from '../mail/mail';
+import Project from './project.model';
 
 export const createProjectController = async (req : Request , res : Response , next : NextFunction) => {
     try {
@@ -38,6 +40,47 @@ export const createProjectController = async (req : Request , res : Response , n
         data : project,
        }
        res.status(HTTP_STATUS.SUCCESS.CREATED).json(response);
+
+       // Gửi email thông báo sau khi tạo project thành công
+       if(project) {
+           // Lấy thông tin chi tiết của project với populate
+           const projectWithDetails = await Project.findById(project._id)
+               .populate('pm', 'profile.name profile.emailContact')
+               .populate('customer', 'profile.name profile.emailContact')
+               .populate('createdBy', 'profile.name profile.emailContact');
+
+           if(projectWithDetails) {
+               const pmData = projectWithDetails.pm as any;
+               const customerData = projectWithDetails.customer as any;
+               const creatorData = projectWithDetails.createdBy as any;
+
+               // Gửi email cho PM
+               if (pmData?.profile?.emailContact) {
+                   await queueMail({
+                       to: pmData.profile.emailContact,
+                       ...EmailTemplates.PROJECT_CREATED(
+                           projectWithDetails.name,
+                           creatorData?.profile?.name || 'Admin',
+                           `${process.env.FRONTEND_URL}/project/${project._id}`
+                       ),
+                       priority: 2
+                   }, req.user?._id as string, req);
+               }
+
+               // Gửi email cho Customer
+               if (customerData?.profile?.emailContact) {
+                   await queueMail({
+                       to: customerData.profile.emailContact,
+                       ...EmailTemplates.PROJECT_CREATED(
+                           projectWithDetails.name,
+                           creatorData?.profile?.name || 'Admin',
+                           `${process.env.FRONTEND_URL}/project/${project._id}`
+                       ),
+                       priority: 2
+                   }, req.user?._id as string, req);
+               }
+           }
+       }
     } catch (error) {
         next(error);
     }
@@ -317,6 +360,45 @@ export const activeProjectController = async (req : Request , res : Response , n
             data : project,
         }
         res.status(HTTP_STATUS.SUCCESS.OK).json(response);
+        
+        // Gửi email thông báo sau khi kích hoạt project thành công
+        if(project) {
+            // Lấy thông tin chi tiết của project với populate
+            const projectWithDetails = await Project.findById(project._id)
+                .populate('pm', 'profile.name profile.emailContact')
+                .populate('customer', 'profile.name profile.emailContact');
+
+            if(projectWithDetails) {
+                const pmData = projectWithDetails.pm as any;
+                const customerData = projectWithDetails.customer as any;
+
+                // Gửi email cho PM
+                if (pmData?.profile?.emailContact) {
+                    await queueMail({
+                        to: pmData.profile.emailContact,
+                        ...EmailTemplates.PROJECT_APPROVE(
+                            projectWithDetails.name,
+                            pmData.profile.name || 'PM',
+                            `${process.env.FRONTEND_URL}/project/${project._id}`
+                        ),
+                        priority: 1
+                    }, req.user?._id as string, req);
+                }
+
+                // Gửi email cho Customer
+                if (customerData?.profile?.emailContact) {
+                    await queueMail({
+                        to: customerData.profile.emailContact,
+                        ...EmailTemplates.PROJECT_APPROVE(
+                            projectWithDetails.name,
+                            customerData.profile.name || 'Customer',
+                            `${process.env.FRONTEND_URL}/project/${project._id}`
+                        ),
+                        priority: 1
+                    }, req.user?._id as string, req);
+                }
+            }
+        }
     } catch (error) {
         next(error);
     }

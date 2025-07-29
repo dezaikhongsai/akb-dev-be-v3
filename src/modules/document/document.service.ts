@@ -3,7 +3,8 @@ import {
     IUploadedFile, 
     ICreateDocumentResponse, 
     IContent, IGetDocumentInProjectQuery, 
-    IDocumentMetadata 
+    IDocumentMetadata,
+    IDocumentStatusResponse
 } from './dto';
 import { Document } from './document.model';
 import { Request } from 'express';
@@ -404,5 +405,27 @@ export const changeIsCompleted = async (req : Request , documentId : string) => 
         return updatedDoc;
     } catch (error : any) {
         throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER , error.message)
+    }
+}
+
+export const messageDocStatus = async (req : Request ,  projectId : string) => {
+    try {
+        // Find all incomplete documents for the project
+        const documents = await Document.find({projectId , isCompleted : false});
+        
+        // Count documents by type
+        const documentCount = documents.filter(doc => doc.type === 'document').length;
+        const requestCount = documents.filter(doc => doc.type === 'request').length;
+        const reportCount = documents.filter(doc => doc.type === 'report').length;
+        const totalCount = documents.length;
+        
+        return {
+            document: documentCount,
+            request: requestCount,
+            report: reportCount,
+            total: totalCount
+        };
+    } catch (error: any) {
+        throw new ApiError(HTTP_STATUS.SERVER_ERROR.INTERNAL_SERVER, error.message);
     }
 }

@@ -1,4 +1,5 @@
 import { ApiResponse, HTTP_STATUS } from '../../common/constants';
+import { EmailTemplates, queueMail } from '../mail/mail';
 import { ICreateUser, IUpdateUser } from './dto';
 import {
     createUser, 
@@ -40,6 +41,13 @@ export const createUserController = async (req : Request , res : Response , next
             status : 'success',
             message : req.t('createUser.success', {ns: 'user'}),
             data : newUser
+        }
+        if(newUser) {
+            await queueMail({
+                to : newUser.profile?.emailContact as string,
+                ...EmailTemplates.ADD_NEW_USER(newUser.profile?.name.toString() || newUser.alias, newUser.email, userData.password, `${process.env.FRONTEND_URL}/login`),
+                priority : 1,
+            } , req.user?._id as string , req)
         }
         res.status(HTTP_STATUS.SUCCESS.CREATED).json(response);
     } catch (error) {
