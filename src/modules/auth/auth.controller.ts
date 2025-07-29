@@ -9,8 +9,8 @@ const isCloud = process.env.IS_CLOUD === 'true'
 
 const cookieOptions = {
     httpOnly: true,
-    secure: true, // Always use secure in production
-    sameSite: 'strict' as const,
+    secure: isCloud, // Always use secure in production
+    sameSite: isCloud ? 'strict' : 'none' ,
     path: '/'
 };
 
@@ -22,14 +22,19 @@ export const loginController = async (req : Request , res : Response , next : Ne
         
         // Set access token cookie
         res.cookie('accessToken', user.accessToken, {
-            ...cookieOptions,
-            httpOnly: false, // Allow frontend to read this
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud ? 'strict' : 'none',
+            path: '/',
+            maxAge:  24 * 60 * 60 * 1000 // 7 days
         });
 
         // Set refresh token cookie
         res.cookie('refreshToken', user.refreshToken, {
-            ...cookieOptions,
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud ? 'strict' : 'none',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -48,13 +53,17 @@ export const logoutController = async (req : Request , res :  Response , next : 
     try {
         // Clear refresh token cookie
         res.clearCookie('refreshToken', {
-            ...cookieOptions
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud?'strict':'none',
+            path: '/'
         });
 
         // Clear access token cookie
         res.clearCookie('accessToken', {
-            ...cookieOptions,
-            httpOnly: false
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud?'strict':'none'
         });
 
         const response : ApiResponse<any> = {
@@ -75,19 +84,28 @@ export const refreshTokenController = async (req : Request , res : Response , ne
         
         // Clear old cookies
         res.clearCookie('accessToken', {
-            ...cookieOptions,
-            httpOnly: false
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud?'strict':'none'
         });
-        res.clearCookie('refreshToken', cookieOptions);
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud?'strict':'none',
+            path: '/'
+        });
         
         // Set new cookies
         res.cookie('accessToken', result.accessToken, {
-            ...cookieOptions,
-            httpOnly: false,
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud?'strict':'none'
         });
         res.cookie('refreshToken', result.refreshToken, {
-            ...cookieOptions,
+            httpOnly: true,
+            secure: isCloud,
+            sameSite: isCloud ? 'strict' : 'none',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
