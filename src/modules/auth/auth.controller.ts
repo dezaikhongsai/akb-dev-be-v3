@@ -14,7 +14,7 @@ const isHttps = process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS
 const getCookieOptions = (isSecure: boolean = false) => ({
     httpOnly: true,
     secure: isSecure,
-    sameSite: (isSecure ? 'strict' : 'lax') as 'strict' | 'lax',
+    sameSite: (isSecure ? 'none' : 'lax') as 'none' | 'lax',
     path: '/',
     maxAge: 24 * 60 * 60 * 1000 // 1 day for access token
 });
@@ -22,7 +22,7 @@ const getCookieOptions = (isSecure: boolean = false) => ({
 const getRefreshCookieOptions = (isSecure: boolean = false) => ({
     httpOnly: true,
     secure: isSecure,
-    sameSite: (isSecure ? 'strict' : 'lax') as 'strict' | 'lax',
+    sameSite: (isSecure ? 'none' : 'lax') as 'none' | 'lax',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days for refresh token
 });
@@ -32,7 +32,6 @@ export const loginController = async (req : Request , res : Response , next : Ne
         const {email , password} = req.body;
         const loginData : ILogin = {email , password};
         const user = await login(req, loginData); 
-        
         // Set access token cookie với cấu hình linh hoạt
         res.cookie('accessToken', user.accessToken, getCookieOptions(isHttps));
 
