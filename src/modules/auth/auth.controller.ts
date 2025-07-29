@@ -5,14 +5,27 @@ import {
 import {Request , Response , NextFunction} from 'express';
 import { ILogin } from './dto';
 import { ApiError, ApiResponse, HTTP_STATUS } from '../../common/constants';
-const isCloud = process.env.IS_CLOUD === 'true'
 
-const cookieOptions = {
+// Cải thiện logic phát hiện môi trường
+const isCloud = process.env.IS_CLOUD === 'true' || process.env.NODE_ENV === 'production';
+const isHttps = process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true';
+
+// Cấu hình cookie linh hoạt hơn
+const getCookieOptions = (isSecure: boolean = false) => ({
     httpOnly: true,
-    secure: isCloud, // Always use secure in production
-    sameSite: isCloud ? 'strict' : 'none' ,
-    path: '/'
-};
+    secure: isSecure,
+    sameSite: (isSecure ? 'strict' : 'lax') as 'strict' | 'lax',
+    path: '/',
+    maxAge: 24 * 60 * 60 * 1000 // 1 day for access token
+});
+
+const getRefreshCookieOptions = (isSecure: boolean = false) => ({
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: (isSecure ? 'strict' : 'lax') as 'strict' | 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days for refresh token
+});
 
 export const loginController = async (req : Request , res : Response , next : NextFunction) => {
     try {
@@ -20,23 +33,11 @@ export const loginController = async (req : Request , res : Response , next : Ne
         const loginData : ILogin = {email , password};
         const user = await login(req, loginData); 
         
-        // Set access token cookie
-        res.cookie('accessToken', user.accessToken, {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud ? 'strict' : 'none',
-            path: '/',
-            maxAge:  24 * 60 * 60 * 1000 // 7 days
-        });
+        // Set access token cookie với cấu hình linh hoạt
+        res.cookie('accessToken', user.accessToken, getCookieOptions(isHttps));
 
-        // Set refresh token cookie
-        res.cookie('refreshToken', user.refreshToken, {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud ? 'strict' : 'none',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        // Set refresh token cookie với cấu hình linh hoạt
+        res.cookie('refreshToken', user.refreshToken, getRefreshCookieOptions(isHttps));
 
         const response : ApiResponse<typeof user> = {
             status : 'success',
@@ -51,20 +52,11 @@ export const loginController = async (req : Request , res : Response , next : Ne
 
 export const logoutController = async (req : Request , res :  Response , next : NextFunction) => {
     try {
-        // Clear refresh token cookie
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud?'strict':'none',
-            path: '/'
-        });
+        // Clear refresh token cookie với cùng cấu hình
+        res.clearCookie('refreshToken', getRefreshCookieOptions(isHttps));
 
-        // Clear access token cookie
-        res.clearCookie('accessToken', {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud?'strict':'none'
-        });
+        // Clear access token cookie với cùng cấu hình
+        res.clearCookie('accessToken', getCookieOptions(isHttps));
 
         const response : ApiResponse<any> = {
             status : 'success',
@@ -82,32 +74,13 @@ export const refreshTokenController = async (req : Request , res : Response , ne
         if(!user || !user._id) throw new ApiError(HTTP_STATUS.ERROR.UNAUTHORIZED, req.t('auth.unauthorized', {ns: 'auth'}));
         const result = await refreshToken(req, user._id.toString());
         
-        // Clear old cookies
-        res.clearCookie('accessToken', {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud?'strict':'none'
-        });
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud?'strict':'none',
-            path: '/'
-        });
+        // Clear old cookies với cùng cấu hình
+        res.clearCookie('accessToken', getCookieOptions(isHttps));
+        res.clearCookie('refreshToken', getRefreshCookieOptions(isHttps));
         
-        // Set new cookies
-        res.cookie('accessToken', result.accessToken, {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud?'strict':'none'
-        });
-        res.cookie('refreshToken', result.refreshToken, {
-            httpOnly: true,
-            secure: isCloud,
-            sameSite: isCloud ? 'strict' : 'none',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
+        // Set new cookies với cùng cấu hình
+        res.cookie('accessToken', result.accessToken, getCookieOptions(isHttps));
+        res.cookie('refreshToken', result.refreshToken, getRefreshCookieOptions(isHttps));
 
         const response : ApiResponse<typeof result> = {
             status : 'success',
