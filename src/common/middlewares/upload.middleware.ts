@@ -18,7 +18,14 @@ type AllowedMimeTypes =
   | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   | 'image/jpeg'
   | 'image/png'
-  | 'image/jpg';
+  | 'image/jpg'
+  | 'image/gif'
+  | 'image/webp'
+  | 'image/svg+xml'
+  | 'image/tiff'
+  | 'image/bmp'
+  | 'image/heic'
+  | 'image/heif';
 
 // Định nghĩa các loại file được phép upload
 const ALLOWED_FILE_TYPES: Record<AllowedMimeTypes, string> = {
@@ -27,7 +34,14 @@ const ALLOWED_FILE_TYPES: Record<AllowedMimeTypes, string> = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
   'image/jpeg': '.jpg',
   'image/png': '.png',
-  'image/jpg': '.jpg'
+  'image/jpg': '.jpg',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'image/svg+xml': '.svg',
+  'image/tiff': '.tiff',
+  'image/bmp': '.bmp',
+  'image/heic': '.heic',
+  'image/heif': '.heif'
 };
 
 // Function để xử lý tên file tiếng Việt một cách chính xác
