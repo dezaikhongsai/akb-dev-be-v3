@@ -37,7 +37,7 @@ export const createDocumentController = async (req: Request, res: Response, next
     try {
         // Upload files
         await new Promise<void>((resolve, reject) => {
-            uploadMultiple(req, res, (error) => {
+            uploadMultiple(req, res, (error: any) => {
                 if (error) {
                     reject(new ApiError(HTTP_STATUS.ERROR.BAD_REQUEST, 'File upload error: ' + error.message));
                 }
@@ -158,7 +158,7 @@ export const addContentToDocumentController = async (req: Request, res: Response
     try {
         // Upload files
         await new Promise<void>((resolve, reject) => {
-            uploadMultiple(req, res, (error) => {
+            uploadMultiple(req, res, (error: any) => {
                 if (error) {
                     reject(error);
                 }
@@ -273,7 +273,7 @@ export const updateContentController = async (req: Request, res: Response, next:
 
         // Upload files
         await new Promise<void>((resolve, reject) => {
-            uploadMultiple(req, res, (error) => {
+            uploadMultiple(req, res, (error : any) => {
                 if (error) {
                     reject(error);
                 }
@@ -313,7 +313,7 @@ export const updateContentController = async (req: Request, res: Response, next:
 
             // Transform new uploaded files
             const newFiles: IFile[] = files.map((file) => ({
-                originalName: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+                originalName: file.originalname, // Sử dụng trực tiếp originalname thay vì chuyển đổi encoding
                 path: file.filename,
                 size: file.size,
                 type: file.mimetype,
